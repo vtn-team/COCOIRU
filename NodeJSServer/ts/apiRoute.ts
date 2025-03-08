@@ -41,6 +41,26 @@ exports.Routes = {
 			
 			"/epictest" : "vc#epictest#             冒険の書を作る",
 		},
+		"/digw" : "dw#web#                          Web",
+		"/searchCy" : {
+			"@word%s" : {
+				"@depth%d" : "dw#getCytoscapeData#           キーワードサーチ"
+			}
+		},
+		"/search" : {
+			"@word%s" : {
+				"@category%s" : {
+					"@depth%d" : "dw#searchWord#           キーワードサーチ"
+				}
+			}
+		},
+		"/wordregist" : {
+			"@word%s" : {
+				"@category%s" : {
+					"@depth%d" : "dw#registerWord#           キーワード登録"
+				}
+			}
+		},
 		"/tools" : {
 			"/getmaster" : {
 				"@name%s" : "tools#getmaster#   マスタデータ更新",
