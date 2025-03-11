@@ -10,18 +10,9 @@ export enum CMD {
 	WELCOME = 1,
 	JOIN = 2,
 	EVENT = 3,
-	GAMESTAT = 4,
-	CHEER = 5,
-	USERSTAT = 6,
-	USERREWARD = 7,
-	LINKFEEDBACK = 8,
+	STAT = 4,
 	SEND_JOIN = 100,
 	SEND_EVENT = 101,
-	SEND_EPISODE = 102,
-	SEND_CHEER = 103,
-	SEND_QR = 104,
-	SEND_QR_EVENT = 105,
-	SEND_USER_JOIN = 110,
 	ERROR = 500,
 };
 
@@ -39,6 +30,10 @@ export interface VCActiveGame
 	ActiveTime: number;
 }
 
+export type InternalEvent = {
+	API: string;
+	[key: string]: any; // その他のプロパティを許容
+}
 
 //接続するユーザを管理する構造体
 export class UserSession {
@@ -46,6 +41,7 @@ export class UserSession {
 	protected client: WebSocket|null;	//WebSocket接続クライアント
 	protected isPingAlive: boolean;		//生きているか
 	protected bornAt: Date;
+	protected userInfo: any;
 	
 	//コンストラクタ
 	constructor(sessionId: string, ws: WebSocket|null) {
@@ -58,6 +54,10 @@ export class UserSession {
 	protected setupExtends(us: UserSession) {
 		this.sessionId = us.sessionId;
 		this.client = us.client;
+	}
+	
+	public setUserInfo(userInfo: any) {
+		this.userInfo = userInfo;
 	}
 	
 	public term() {

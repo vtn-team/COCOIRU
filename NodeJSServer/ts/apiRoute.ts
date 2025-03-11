@@ -44,20 +44,15 @@ exports.Routes = {
 		"/digw" : "dw#web#                          Web",
 		"/searchCy" : {
 			"@word%s" : {
-				"@depth%d" : "dw#getCytoscapeData#           キーワードサーチ"
+				"@category%s" : {
+					"@depth%d" : "dw#getCytoscapeData#           キーワードサーチ"
+				}
 			}
 		},
 		"/search" : {
 			"@word%s" : {
 				"@category%s" : {
 					"@depth%d" : "dw#searchWord#           キーワードサーチ"
-				}
-			}
-		},
-		"/wordregist" : {
-			"@word%s" : {
-				"@category%s" : {
-					"@depth%d" : "dw#registerWord#           キーワード登録"
 				}
 			}
 		},
@@ -74,6 +69,7 @@ exports.Routes = {
 	},
 	POST: {
 		"/login" : "user#login",
+		"/callback" : "auth#googleAuth",
 		"/maintain" : "vc#maintenance#             メンテナンス",
 		"/vc" : {
 			"/gamelink" : "vc#glink#               ゲームリンク",

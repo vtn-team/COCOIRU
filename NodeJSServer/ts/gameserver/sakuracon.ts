@@ -215,7 +215,7 @@ export class SakuraConnect {
 		};
 		
 		let json = {
-			Command: CMD.SEND_CHEER,
+			Command: 0,
 			GameId: evt.GameId,
 			ToUserId: userId,
 			FromUserId: users[index].UserId,

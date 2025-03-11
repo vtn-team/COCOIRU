@@ -22,6 +22,137 @@
 }
 </style>
 <script>
+$ = document.querySelector.bind(document);
+let index=1;
+let cy = null;
+let wssURI = "wss://wss.vtn-game.com/ws/";
+wssURI = "ws://localhost:3000";
+let wssState = 0;
+let wsSessionId = null;
+
+const CMD = {
+	WELCOME: 1,
+	JOIN: 2,
+	EVENT: 3,
+	STAT: 4,
+	SEND_JOIN: 100,
+	SEND_EVENT: 101,
+	ERROR: 500,
+};
+
+function createdPayload(data) {
+	let payload = [];
+	if(data) {
+		for(var k in data) {
+			payload.push({
+				Key: k,
+				TypeName: typeof data[k],
+				Data: data[k]
+			});
+		}
+	}
+	return payload;
+}
+
+function parsePayload(payload) {
+	let data = {};
+	if(payload) {
+		for(var d of payload) {
+			switch(d.TypeName)
+			{
+			case "Integer":
+			case "number":
+				data[d.Key] = Number(d.Data);
+				break;
+				
+			case "String":
+				data[d.Key] = d.Data;
+				break;
+				
+			default:
+				data[d.Key] = d.Data;
+				break;
+			}
+		}
+	}
+	
+	return data;
+}
+
+//WebSocket接続
+function connectDGS() {
+	if(wssState != 0) return;
+	
+	ws = new WebSocket(wssURI);
+	ws.onopen = (event) => {
+		wssState = 1;
+	};
+	
+	ws.onerror = (error) => {
+		wssState = 0;
+		console.log("Connection Error");
+		console.log(error)
+		
+		//再接続する
+		setTimeout(()=>{ connectDGS(); }, 5000);
+	};
+		
+	ws.onclose = (event) => {
+		wssState = 0;
+		console.log("close");
+		
+		//再接続する
+		setTimeout(()=>{ connectDGS(); }, 5500);
+	};
+
+	ws.onmessage = (event) => {
+		const json = JSON.parse(event.data);
+		const time = new Date(json.date);
+		//場合に応じて
+		let data = JSON.parse(json.Data);
+		json.Data = data;
+		execMessage(json);
+	};
+}
+
+function execMessage(data) {
+	let ret = "";
+	//let payload = parsePayload(data.Data.Payload);
+	//delete data.Data.Payload;
+	//data.Data.Payload = payload;
+	
+	switch(data.Command){
+	case CMD.WELCOME:
+	{
+		//SessionIdをキーにしてJoinを返す
+		let json = {
+			SessionId: data.Data.SessionId,
+			Command: CMD.SEND_USER_JOIN,
+		};
+		ws.send(JSON.stringify(json));
+		wsSessionId = data.Data.SessionId;
+	}
+	break;
+	
+	case CMD.STAT:
+		console.log(data);
+		break;
+	
+	case CMD.EVENT:
+	{
+		console.log(data);
+	}
+	break;
+	
+	case CMD.ERROR:
+	{
+		setupErrorDialog(data);
+	}
+	break;
+	
+	}
+	return ret;
+}
 
 var cyStyle = [
     {
@@ -68,8 +199,7 @@ var cyStyle = [
 
 
 window.addEventListener("load", async (event) => {
-    var $ = document.querySelector.bind(document);
-
+    connectDGS();
     let result = {
   "elements": {
     "nodes": [
@@ -389,20 +519,65 @@ window.addEventListener("load", async (event) => {
       }
     ]
   }
-};//await searchWord("Vulkan");
-	createGraph(result.elements);
+};
 });
 
-async function searchWord(word) {
-	let req = await fetch(`/searchCy/${word}/1`, {
+async function searchWord() {
+	let word = $("#word").value;
+	let category = $("#category").value;
+	if(word == "") return;
+	if(category == "") return;
+	
+	let req = await fetch(`/searchCy/${word}/${category}/1`, {
 		mode: 'cors'
 	});
 	
-	return  await req.json();
+	let words = await req.json();
+	if(words.Success == 0) {
+		alert("単語は見つかりませんでした。検索を開始しました。");
+		return;
+	}
+	
+	let centerId = 0;
+	let contents = {
+		nodes:[],
+		edges:[]
+	};
+	
+	words.center.id = "" + index;
+	centerId = index;
+	index++;
+	
+	contents.nodes.push({ data: words.center, classes: 'center' });
+	for(let n of words.nodes) {
+		n.id = "" + index;
+		
+		let sameWord = false;
+		for(let w of words.nodes) {
+			if(w.id === undefined) continue;
+			if(w.Word == n.Word && n.id != w.id){
+				sameWord = true;
+				break;
+			}
+		}
+		if(sameWord) {
+			index++;
+			continue;
+		}
+		
+		contents.nodes.push({ data: n });
+		contents.edges.push({ data: {
+			weight: 1,
+			source: "" + centerId, 
+			target: "" + index
+		}
+		});
+		index++;
+	}
+	console.log(contents)
+	createGraph(contents);
 }
 
-let index=12;
-let cy = null;
 function createGraph(data)
 {
     cy = cytoscape({
@@ -417,6 +592,7 @@ function createGraph(data)
       console.log( 'tap ' + node.id() );
       const nodeData = node.data();
       console.log(nodeData);
+      $("#main").innerText = nodeData.Result;
     });
     cy.on('dragfreeon', 'node', (evt) => {
       refreshLayout();
@@ -488,8 +664,9 @@ function addNode(){
 </head>
 <body>
 <div id="cy"></div>
-検索<br />
-<input type="text"></input>
-<input type="button" value="追加" onclick=addNode() />
+単語<input id="word" type="text"></input><br />
+カテゴリ<input id="category" value="プログラミング" type="text"></input><br />
+<input type="button" value="検索" onclick=searchWord() />
+<div id="main"></div>
 </body>
 </html>
