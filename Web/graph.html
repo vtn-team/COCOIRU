@@ -96,7 +96,7 @@ function connectDGS() {
 		//再接続する
 		setTimeout(()=>{ connectDGS(); }, 5000);
 	};
-		
+	
 	ws.onclose = (event) => {
 		wssState = 0;
 		console.log("close");
@@ -104,7 +104,7 @@ function connectDGS() {
 		//再接続する
 		setTimeout(()=>{ connectDGS(); }, 5500);
 	};
-
+	
 	ws.onmessage = (event) => {
 		const json = JSON.parse(event.data);
 		const time = new Date(json.date);
@@ -155,46 +155,46 @@ function execMessage(data) {
 }
 
 var cyStyle = [
-    {
-        selector: 'node',
-        style: {
-            shape: 'square',
-            'background-fit': 'cover cover',
-            'background-image-opacity': 0.5,
-            'background-color': '#bbb',
-            'width': 30,
-            'height': 30,
-            'label': 'data(Word)'
-        }
-    },
-    {
-        selector: 'edge',
-        style: {
-            'curve-style': 'bezier',
-            'target-arrow-shape': 'triangle',
-            'width': 4,
-            'line-color': '#ddd',
-            'target-arrow-color': '#ddd'
-        }
-    },
-    {
-      selector: 'node.center',
-      style: {
-        shape: 'round-rectangle',
-        'background-color': '#eee',
-        'width': 210,
-        'height': 210,
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'text-wrap': 'wrap',
-        'text-max-width': '180px',
-        'text-overflow-wrap' : 'anywhere',
-        'font-size': 14,
-        'label': (ele) => {
-          return ele.data('Word') + '\n\n' + ele.data('Summary');
-        }
-      }
-    },
+{
+	selector: 'node',
+	style: {
+		shape: 'square',
+		'background-fit': 'cover cover',
+		'background-image-opacity': 0.5,
+		'background-color': '#bbb',
+		'width': 30,
+		'height': 30,
+		'label': 'data(Word)'
+	}
+},
+{
+	selector: 'edge',
+	style: {
+		'curve-style': 'bezier',
+		'target-arrow-shape': 'triangle',
+		'width': 4,
+		'line-color': '#ddd',
+		'target-arrow-color': '#ddd'
+	}
+},
+{
+	selector: 'node.center',
+	style: {
+		shape: 'round-rectangle',
+		'background-color': '#eee',
+		'width': 210,
+		'height': 210,
+		'text-valign': 'center',
+		'text-halign': 'center',
+		'text-wrap': 'wrap',
+		'text-max-width': '180px',
+		'text-overflow-wrap' : 'anywhere',
+		'font-size': 14,
+		'label': (ele) => {
+			return ele.data('Word') + '\n\n' + ele.data('Summary');
+		}
+	}
+}
 ];
 
 
@@ -229,6 +229,10 @@ async function searchWord() {
 	index++;
 	
 	contents.nodes.push({ data: words.center, classes: 'center' });
+	for(let kw of words.center.Relations) {
+		words.center.Result = words.center.Result.replaceAll(kw, `<a href="#" class="keyword-link" data-action="${kw}")>${kw}</a>`)
+	}
+	
 	for(let n of words.nodes) {
 		n.id = "" + index;
 		
@@ -243,6 +247,10 @@ async function searchWord() {
 		if(sameWord) {
 			index++;
 			continue;
+		}
+		
+		for(let kw of n.Relations) {
+			n.Result = n.Result.replaceAll(kw, `<a href="#" class="keyword-link" data-action="${kw}")>${kw}</a>`)
 		}
 		
 		contents.nodes.push({ data: n });
@@ -272,7 +280,16 @@ function createGraph(data)
       console.log( 'tap ' + node.id() );
       const nodeData = node.data();
       console.log(nodeData);
-      $("#main").innerText = nodeData.Result;
+      
+      $("#main").innerHTML = nodeData.Result;
+      document.querySelectorAll(".keyword-link").forEach(link => {
+          link.addEventListener("click", function(event) {
+              event.preventDefault();
+              const action = this.dataset.action;
+              
+              console.log(action);
+          });
+      });
     });
     cy.on('dragfreeon', 'node', (evt) => {
       refreshLayout();
