@@ -18,7 +18,7 @@ function prettyInfo(key: string, dbRecord: any) {
 	result.Summary = info.properties.Summary;
 	result.Result = info.properties.Result;
 	result.Relations = info.properties.RelationWords;
-			
+	
 	return result;
 }
 
@@ -199,6 +199,7 @@ export async function registerFromAI(word: string, category: string, depth: numb
 		result.Category = category;
 		
 		digWords(word, category, depth, fromKeyword);
+		
 	} catch(ex) {
 		console.log(ex);
 	}

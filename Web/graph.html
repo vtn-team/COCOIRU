@@ -108,6 +108,7 @@ function connectDGS() {
 	ws.onmessage = (event) => {
 		const json = JSON.parse(event.data);
 		const time = new Date(json.date);
+		console.log(json);
 		//場合に応じて
 		let data = JSON.parse(json.Data);
 		json.Data = data;
@@ -203,8 +204,8 @@ window.addEventListener("load", async (event) => {
 });
 
 async function searchWord() {
-	let word = $("#word").value;
-	let category = $("#category").value;
+	let word = encodeURIComponent($("#word").value);
+	let category = encodeURIComponent($("#category").value);
 	if(word == "") return;
 	if(category == "") return;
 	
@@ -229,10 +230,6 @@ async function searchWord() {
 	index++;
 	
 	contents.nodes.push({ data: words.center, classes: 'center' });
-	for(let kw of words.center.Relations) {
-		words.center.Result = words.center.Result.replaceAll(kw, `<a href="#" class="keyword-link" data-action="${kw}")>${kw}</a>`)
-	}
-	
 	for(let n of words.nodes) {
 		n.id = "" + index;
 		
@@ -251,6 +248,7 @@ async function searchWord() {
 		
 		for(let kw of n.Relations) {
 			n.Result = n.Result.replaceAll(kw, `<a href="#" class="keyword-link" data-action="${kw}")>${kw}</a>`)
+			n.Result = n.Result.replaceAll("\n", "<br />")
 		}
 		
 		contents.nodes.push({ data: n });
@@ -279,9 +277,9 @@ function createGraph(data)
       const node = evt.target;
       console.log( 'tap ' + node.id() );
       const nodeData = node.data();
-      console.log(nodeData);
+      console.log(decodeURIComponent(nodeData.Result));
       
-      $("#main").innerHTML = nodeData.Result;
+      $("#main").innerHTML = decodeURIComponent(nodeData.Result);
       document.querySelectorAll(".keyword-link").forEach(link => {
           link.addEventListener("click", function(event) {
               event.preventDefault();
