@@ -1,9 +1,10 @@
 const { Client, APIErrorCode } = require("@notionhq/client")
+import { COCOIRU_NOTION_TOKEN } from "./../config/config"
 
-let notion = new Client({ auth: process.env.NOTION_TOKEN });
+let notion = new Client({ auth: COCOIRU_NOTION_TOKEN });
 let users = new Array();
 
-function prettyPage(page: any)
+export function prettyPage(page: any)
 {
     let json: any = {}
     const prop = page.properties;
@@ -261,12 +262,30 @@ export async function getConfig(dbId: string, filter: any = null)
 	return config;
 }
 
-exports.getPageProperties = async (pgId: string) =>
+export async function getPageProperties(pgId: string)
 {
 	let propeties = await notion.pages.retrieve({
 		page_id: pgId
 	});
 	return propeties;
+}
+
+export async function searchDocs(query: string, filter: any)
+{
+	let pages = await searchNotionDatabases(query, filter);
+	return pages;
+}
+
+export async function getDatabase(dbId: string, filter: any)
+{
+	let pages = await getNotionDatabase(dbId, filter);
+	return pages;
+}
+
+export async function createPage(data: any)
+{
+  let response = await notion.pages.create(data);
+  return response;
 }
 
 exports.getPageConf = async (pgId: string) =>
@@ -281,24 +300,6 @@ export async function getContents(pgId: string, withChilds: boolean = false)
 {
 	let page = await getPageContents(pgId, withChilds);
 	return page;
-}
-
-exports.getDatabase = async(dbId: string, filter: any) =>
-{
-	let pages = await getNotionDatabase(dbId, filter);
-	return pages;
-}
-
-exports.searchDocs = async (query: string, filter: any) =>
-{
-	let pages = await searchNotionDatabases(query, filter);
-	return pages;
-}
-
-exports.createPage = async (data: any) => 
-{
-  let response = await notion.pages.create(data);
-  return response;
 }
 
 exports.auth = async (code: string) =>
@@ -399,6 +400,11 @@ exports.convertToSlackUser = (user: any) =>
     username: user.name,
     icon_url: user.avatar_url
   }
+}
+
+export type NotionPage = {
+	Title:string;
+	Page: Array<any>;
 }
 
 /*

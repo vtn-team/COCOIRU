@@ -11,37 +11,7 @@ exports.Routes = {
 		"/stat" : {
 			"/" : "stat#check#状態確認"
 		},
-		"/vc" : {
-			"/" : "debug#web#                      Webテスト",
-			"/debug" : "debug#webDev#              Webテスト(開発)",
-			"/bg.gif" : "debug#bg#                 Webテスト",
-			"/anime.min.js" : "debug#animejs#      Webテスト",
-			"/stat" : "vc#stat#                    ゲームの状況確認",
-			"/getaddr" : "vc#getaddr#              ゲームサーバ接続情報取得",
-			"/user" : {
-				"@id%d" : "vc#getUser#             ユーザ取得",
-				"@hash%s" : "vc#getUser#           ユーザ取得",
-			},
-			"/games" : {
-				"@id%d" : "vc#gameHistory#         冒険の記録を取得",
-			},
-			"/history" : {
-				"@id%d" : "vc#userHistory#         冒険の記録を取得",
-			},
-			"/messages" : {
-				"@id%d" : "vc#userMessage#         もらったメッセージを取得",
-			},
-			"/friend" : {
-				"@id%d" : "vc#friendList#          トモダチを取得",
-			},
-			"/gameusers" : {
-				"/" : "vc#getGameUsers#       ゲーム参加ユーザの取得",
-				"/active" : "vc#getGameUsers#       ゲーム参加ユーザの取得",
-			},
-			
-			"/epictest" : "vc#epictest#             冒険の書を作る",
-		},
-		"/digw" : "dw#web#                          Web",
+		"/digw" : "dw#web#Web",
 		"/searchCy" : {
 			"@word%s" : {
 				"@category%s" : {
@@ -55,6 +25,9 @@ exports.Routes = {
 					"@depth%d" : "dw#searchWord#           キーワードサーチ"
 				}
 			}
+		},
+		"/board" : {
+			"@URI%s" : "dw#web2#Web",
 		},
 		"/tools" : {
 			"/getmaster" : {
@@ -71,21 +44,6 @@ exports.Routes = {
 		"/login" : "user#login",
 		"/callback" : "auth#googleAuth",
 		"/maintain" : "vc#maintenance#             メンテナンス",
-		"/vc" : {
-			"/gamelink" : "vc#glink#               ゲームリンク",
-			"/usercreate" : "vc#createUser#        ユーザ生成(テスト用)",
-			"/gamestart" : "vc#gameStart#          ゲーム開始",
-			"/gameend" : "vc#gameEnd#              ゲーム終了",
-			"/handover" : "vc#handOver#            ゲーム交代",
-			"/ai" :{
-				"/gamestart" : "vc#gameStartAI#    ゲーム開始",
-				"/gameend" : "vc#gameEndAI#        ゲーム終了",
-			},
-			"/cheer" : "vc#cheer#                  おうえん(API経由)",
-			"/gameask" : "vc#gameAsk#              アンケート",
-			"/subscribe" : "vc#subscribe#          プッシュ通知登録",
-			"/send" : "vc#send#                    プッシュ通知送信",
-		},
 		"/tools" : {
 			"/ephemeralkey" : "ai#ephemeralkey#     エフェメラルキーを取得"
 		},

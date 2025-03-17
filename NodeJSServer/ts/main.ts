@@ -25,7 +25,7 @@ import { setupNeo4j } from "./lib/neo4j"
 	}
 	
 	//DBウォームアップ
-	await connect();
+	//await connect();
 	
 	//await loadInformation();
 	

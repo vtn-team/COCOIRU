@@ -1,4 +1,5 @@
 import { query } from "./../lib/database"
+import { getTable } from "./../cococore/cocopage"
 import { searchFromAI, registerFromAI, diggingKeyword } from "./../vclogic/vcSearch"
 const { v4: uuidv4 } = require('uuid')
 const fs = require('fs').promises;
@@ -67,5 +68,15 @@ export async function web(req: any,res: any,route: any)
 		statusCode: 200,
 		type: 'text/html',
 		html: text.toString()
+	}
+}
+
+export async function web2(req: any,res: any,route: any)
+{
+	const URI = decodeURIComponent(route.query.URI);
+	const text = await getTable(URI);
+	return {
+		statusCode: 200,
+		URI: URI
 	}
 }
