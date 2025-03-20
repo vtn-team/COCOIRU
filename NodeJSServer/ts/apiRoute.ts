@@ -26,6 +26,9 @@ exports.Routes = {
 				}
 			}
 		},
+		"/monad" : {
+			"/" : "monad#test#sss"
+		},
 		"/board" : {
 			"@URI%s" : "dw#web2#Web",
 		},

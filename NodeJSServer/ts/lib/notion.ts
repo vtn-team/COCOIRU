@@ -17,12 +17,28 @@ export function prettyPage(page: any)
         if(page.properties[key].type == "select" || page.properties[key].type == "multi_select"){
           data.type = "select"
         }
+        
+        if(key == "ID" && !data.type) {
+          data = data.number;
+          return data;
+        }
+        
+        console.log(page.properties[key]);
+        
+        if(page.properties[key].type == "relation") {
+          data.type = "relation"
+        }
+        
+        //
         switch(data.type){
         case "text":
           data = data.plain_text
           break;
         case "select":
           data = data.name
+          break;
+        case "relation":
+          data = data.id
           break;
         case "person":
           data = {
@@ -45,7 +61,7 @@ export function prettyPage(page: any)
       }else if(typeof d == "string"){
         dt = pretty(d)
       }else {
-        if(d.length > 1 || page.properties[key].type == "select" || page.properties[key].type == "multi_select") {
+        if(d.length > 1 || page.properties[key].type == "select" || page.properties[key].type == "multi_select" || page.properties[key].type == "relation") {
           dt = [];
           for(let i=0; i<d.length; ++i) {
             dt[i] = pretty(d[i])

@@ -12,21 +12,17 @@ export enum DataType {
 }
 
 const PagePropertyScheme:any = [
-	{ Name: "URI", Style: "title", Type: "text" },
+	{ Name: "Title", Style: "title", Type: "text" },
 	{ Name: "Origin", Style: "rich_text", Type: "text" },
 	{ Name: "Path", Style: "rich_text", Type: "text" }
 ];
 
 const WordPropertyScheme:any = [
 	{ Name: "Word", Style: "title", Type: "text" },
-	/*
-	{ Name: "Description", Style: "rich_text", Type: "text" },
-	{ Name: "Reference", Style: "rich_text", Type: "text" }
-	*/
 ];
 
 const NotePropertyScheme:any = [
-	
+	{ Name: "Title", Style: "title", Type: "text" },
 ];
 
 type NotionDBInfo = {
@@ -39,18 +35,21 @@ let tableInfo:any = {
 	PAGE: {
 		DatabaseId : "1b839cbfbab980b49498f62844cb12b9",
 		DataKey: "URI",
+		DataType: "rich_text",
 		UseContents: true,
 		Scheme: PagePropertyScheme,
 	},
 	WORD: {
 		DatabaseId : "1ba39cbfbab980adaf6bc97edae68811",
 		DataKey: "Word",
+		DataType: "title",
 		UseContents: false,
 		Scheme: WordPropertyScheme,
 	},
 	NOTE: {
-		DatabaseId : "1bb39cbfbab980efa051e813985592c8",
+		DatabaseId : "ROOT",
 		DataKey: "Title",
+		DataType: "title",
 		UseContents: true,
 		Scheme: NotePropertyScheme,
 	},
@@ -64,12 +63,15 @@ export async function getNotionData(type: DataType, dataKey: string) {
 	
 	try {
 		let info = tableInfo[type];
-		let prop:any = await getDatabase(info.DatabaseId, {
-			"property": info.DataKey,
-			"title": {
-				"contains": dataKey
-			}
-		});
+		let filter:any = {
+			"property": info.DataKey
+		};
+		filter[info.DataType] = {
+			"contains": dataKey
+		};
+		
+		let prop:any = await getDatabase(info.DatabaseId, filter);
+		
 	console.log(prop);
 		if(prop.length > 0){
 			result = prettyPage(prop[0]);
