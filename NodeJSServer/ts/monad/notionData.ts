@@ -1,59 +1,6 @@
-import { chatWithSession } from "./../lib/chatgpt"
-import { getMaster, getLevel, getGameInfo, getAIRule } from "./../lib/masterDataCache"
-import { internalEvent } from "../gameserver/server"
-import { query } from "./../lib/database"
-import { createPage, getPageProperties, getDatabase, prettyPage } from "./../lib/notion"
+import { DataType, PagePropertyScheme, WordPropertyScheme, NotePropertyScheme, NotionDBInfo, TableInfo } from "./dataScheme"
+import { createPage, getPageProperties, getDatabase, getContents, prettyPageProperty, convertToMarkdown } from "./../lib/notion"
 const { v4: uuidv4 } = require('uuid')
-
-export enum DataType {
-	PAGE = "PAGE",
-	WORD = "WORD",
-	NOTE = "NOTE"
-}
-
-const PagePropertyScheme:any = [
-	{ Name: "Title", Style: "title", Type: "text" },
-	{ Name: "Origin", Style: "rich_text", Type: "text" },
-	{ Name: "Path", Style: "rich_text", Type: "text" }
-];
-
-const WordPropertyScheme:any = [
-	{ Name: "Word", Style: "title", Type: "text" },
-];
-
-const NotePropertyScheme:any = [
-	{ Name: "Title", Style: "title", Type: "text" },
-];
-
-type NotionDBInfo = {
-	DatabaseId: string;
-	KeyName: string;
-	UseContents: boolean;
-};
-
-let tableInfo:any = {
-	PAGE: {
-		DatabaseId : "1b839cbfbab980b49498f62844cb12b9",
-		DataKey: "URI",
-		DataType: "rich_text",
-		UseContents: true,
-		Scheme: PagePropertyScheme,
-	},
-	WORD: {
-		DatabaseId : "1ba39cbfbab980adaf6bc97edae68811",
-		DataKey: "Word",
-		DataType: "title",
-		UseContents: false,
-		Scheme: WordPropertyScheme,
-	},
-	NOTE: {
-		DatabaseId : "ROOT",
-		DataKey: "Title",
-		DataType: "title",
-		UseContents: true,
-		Scheme: NotePropertyScheme,
-	},
-};
 
 //対象のNotionのデータを返す
 export async function getNotionData(type: DataType, dataKey: string) {
@@ -62,19 +9,10 @@ export async function getNotionData(type: DataType, dataKey: string) {
 	console.log("getNotionData");
 	
 	try {
-		let info = tableInfo[type];
-		let filter:any = {
-			"property": info.DataKey
-		};
-		filter[info.DataType] = {
-			"contains": dataKey
-		};
-		
-		let prop:any = await getDatabase(info.DatabaseId, filter);
-		
-	console.log(prop);
-		if(prop.length > 0){
-			result = prettyPage(prop[0]);
+		let info = TableInfo[type];
+		let data:any = await getRelatedNotionData(type, info.DataKey, info.DataType, { "contains": dataKey }, info.UseContents);
+		if(data.length > 0){
+			result = data[0];
 		}
 	}catch(ex){
 		console.log(ex);
@@ -83,12 +21,69 @@ export async function getNotionData(type: DataType, dataKey: string) {
 	return result;
 }
 
-async function createNotionData(type: DataType, data: any) {
+//対象のNotionのデータを返す
+export async function getRelatedNotionData(type: DataType, fkeyName: string, fKeyType: string, fKeyValue: any, useContents: boolean) {
+	let result = null;
+	
+	console.log("getRelatedNotionData");
+	
+	try {
+		let info = TableInfo[type];
+		let filter:any = {
+			"property": fkeyName
+		};
+		filter[fKeyType] = fKeyValue;
+		
+		console.log(filter)
+		
+		let prop:any = await getDatabase(info.DatabaseId, filter);
+		if(prop.length > 0){
+			result = [];
+			for(let d of prop) {
+				let data = prettyPageProperty(d);
+				if(useContents) {
+					let contents:any = await getContents(d.id);
+					data.Contents = contents;
+				}
+				result.push(data);
+			}
+		}
+	}catch(ex){
+		console.log(ex);
+	}
+	
+	return result;
+}
+
+//対象のNotionのデータを返す
+export async function getChildNotionData(childIds: Array<string>) {
+	let result = [];
+	
+	console.log("getChildNotionData");
+	
+	try {
+		for(let id of childIds) {
+			let prop:any = await getDatabase(id);
+			let contents = await getContents(id);
+			if(!contents) continue;
+			if(contents.length == 0) continue;
+			
+			prop.Contents = contents;
+			result.push(prop);
+		}
+	}catch(ex){
+		console.log(ex);
+	}
+	
+	return result;
+}
+
+export async function createNotionData(type: DataType, data: any) {
 	let result = null;
 	
 	console.log("createNotionData");
 	try {
-		let info = tableInfo[type];
+		let info = TableInfo[type];
 		
 		let props: any = {};
 		for(let d of info.Scheme) {
@@ -105,7 +100,7 @@ async function createNotionData(type: DataType, data: any) {
 		});
 		
 		console.log(page);
-		result = prettyPage(page);
+		result = prettyPageProperty(page);
 	}catch(ex){
 		console.log(ex);
 	}
@@ -113,7 +108,7 @@ async function createNotionData(type: DataType, data: any) {
 	return result;
 }
 
-async function updateData(uuid: string, data: any) {
+export async function updateData(uuid: string, data: any) {
 	let result = null;
 	
 	console.log("createExtendInfo");

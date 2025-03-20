@@ -1,6 +1,6 @@
 import { chat, chatWithModel } from "./../lib/chatgpt"
 import { getAIRule } from "./../lib/masterDataCache"
-import { createNode, getKeywords, createRelationship, deepSearch, deepSearchKeywordOnly, getKeywordsAny } from "./../lib/neo4j"
+import { createNode, getKeywords, createRelationship, deepSearch, deepSearchKeywordOnly, getNode } from "./../lib/neo4j"
 import { query } from "./../lib/database"
 import { internalEvent } from "../gameserver/server"
 
@@ -40,7 +40,7 @@ export async function diggingKeyword(word: string, depth: number) {
 	};
 	
 	try {
-		let baseWord = await getKeywordsAny(word);
+		let baseWord = await getNode("Keyword", "Word", word);
 		if(baseWord.records.length == 0) return result;
 		
 		let relay = await deepSearchKeywordOnly(word, depth);

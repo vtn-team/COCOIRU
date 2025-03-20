@@ -2,7 +2,7 @@ import { chatWithSession } from "./../lib/chatgpt"
 import { getMaster, getLevel, getGameInfo, getAIRule } from "./../lib/masterDataCache"
 import { internalEvent } from "../gameserver/server"
 import { query } from "./../lib/database"
-import { createPage, getPageProperties, getDatabase, prettyPage } from "./../lib/notion"
+import { createPage, getPageProperties, getDatabase, prettyPageProperty } from "./../lib/notion"
 const { v4: uuidv4 } = require('uuid')
 
 const axios = require("axios");
@@ -69,7 +69,7 @@ async function searchExtendInfo(uri: string) {
 		});
 	console.log(prop);
 		if(prop.length > 0){
-			result = prettyPage(prop[0]);
+			result = prettyPageProperty(prop[0]);
 		}
 	}catch(ex){
 		console.log(ex);
@@ -121,7 +121,7 @@ async function createExtendInfo(origin: string, path: string) {
 		});
 		
 	console.log(page);
-		result = prettyPage(page);
+		result = prettyPageProperty(page);
 	}catch(ex){
 		console.log(ex);
 	}
@@ -172,8 +172,8 @@ export async function getWebPage(uri: string) {
 		const description = $('meta[name="description"]').attr("content") || "なし";
 
 		// JSON-LD の解析
-		const jsonLD = $("script[type='application/ld+json']").map((i, el) => $(el).html()).get();
-		const structuredData = jsonLD.map(json => JSON.parse(json));
+		const jsonLD = $("script[type='application/ld+json']").map((i:number, el:any) => $(el).html()).get();
+		const structuredData = jsonLD.map((json:any) => JSON.parse(json));
 
 		// JSON-LD から特定のデータを抽出（例: @typeが"Article"のもの）
 		const articles = jsonpath.query(structuredData, "$..[?(@.@type=='Article')]");
@@ -186,11 +186,11 @@ export async function getWebPage(uri: string) {
 		const xTitle = xpath.select("//title/text()", doc).toString();
 
 		// 画像URLの取得
-		const images = $("img").map((i, el) => $(el).attr("src")).get();
+		const images = $("img").map((i:number, el:any) => $(el).attr("src")).get();
 
 		// CSS, JSの取得
-		const stylesheets = $("link[rel='stylesheet']").map((i, el) => $(el).attr("href")).get();
-		const scripts = $("script[src]").map((i, el) => $(el).attr("src")).get();
+		const stylesheets = $("link[rel='stylesheet']").map((i:number, el:any) => $(el).attr("href")).get();
+		const scripts = $("script[src]").map((i:number, el:any) => $(el).attr("src")).get();
 
 		// 結果表示
 		console.log("タイトル:", title);
@@ -202,7 +202,7 @@ export async function getWebPage(uri: string) {
 		console.log("画像一覧:", images);
 		console.log("CSS一覧:", stylesheets);
 		console.log("JS一覧:", scripts);
-	} catch (error) {
+	} catch (error:any) {
 		console.error("エラー:", error.message);
 	}
 }

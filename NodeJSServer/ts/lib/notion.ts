@@ -4,7 +4,56 @@ import { COCOIRU_NOTION_TOKEN } from "./../config/config"
 let notion = new Client({ auth: COCOIRU_NOTION_TOKEN });
 let users = new Array();
 
-export function prettyPage(page: any)
+/*
+function getText(block: any) {
+  let result:any = {}
+  let text = null;
+  
+  if(block[block.type].rich_text) {
+    text = block[block.type].rich_text[0]
+  }
+  if(block[block.type].text) {
+    text = block[block.type].text[0]
+  }
+  if(!text) return result;
+  console.log(text);
+  
+  if(!text.type) return result;
+  let content = text[text.type];
+  if(!content) return result;
+  
+  result.Annotations = {}
+  for(let style in text.annotations) {
+    let obj = text.annotations[style];
+    if(obj) {
+      result.Annotations[style] = obj;
+    }
+  }
+  result.Content = content.content;
+  if(content.link) {
+    result.Link = content.link;
+  }
+  return result;
+}
+*/
+
+const getText = (richTextArray:any) => {
+  return richTextArray
+    .map((textObj:any) => {
+      let text = textObj.text.content;
+
+      if (textObj.annotations.bold) text = `**${text}**`;
+      if (textObj.annotations.italic) text = `*${text}*`;
+      if (textObj.annotations.strikethrough) text = `~~${text}~~`;
+      if (textObj.annotations.underline) text = `<u>${text}</u>`;
+      if (textObj.annotations.code) text = `\`${text}\``;
+
+      return text;
+    })
+    .join('');
+};
+
+export function prettyPageProperty(page: any)
 {
     let json: any = {}
     const prop = page.properties;
@@ -18,19 +67,21 @@ export function prettyPage(page: any)
           data.type = "select"
         }
         
-        if(key == "ID" && !data.type) {
-          data = data.number;
-          return data;
+        if(page.properties[key].type == "unique_id") {
+          data.type = "unique_id"
         }
-        
-        console.log(page.properties[key]);
         
         if(page.properties[key].type == "relation") {
           data.type = "relation"
         }
         
+        //console.log(page.properties[key]);
+        
         //
         switch(data.type){
+        case "unique_id":
+          data = data.number
+          break;
         case "text":
           data = data.plain_text
           break;
@@ -74,6 +125,105 @@ export function prettyPage(page: any)
       json[key] = dt;
     };
     return json;
+}
+
+export function convertToMarkdown(blocks: any) {
+  let markdown = '';
+  if(!blocks) return markdown.trim();
+  
+  blocks.forEach((block:any) => {
+    switch (block.type) {
+      case 'paragraph':
+        markdown += getText(block.paragraph.rich_text) + '\n\n';
+        break;
+      case 'heading_1':
+        markdown += '# ' + getText(block.heading_1.rich_text) + '\n\n';
+        break;
+      case 'heading_2':
+        markdown += '## ' + getText(block.heading_2.rich_text) + '\n\n';
+        break;
+      case 'heading_3':
+        markdown += '### ' + getText(block.heading_3.rich_text) + '\n\n';
+        break;
+      case 'bulleted_list_item':
+        markdown += '- ' + getText(block.bulleted_list_item.rich_text) + '\n';
+        break;
+      case 'numbered_list_item':
+        markdown += '1. ' + getText(block.numbered_list_item.rich_text) + '\n';
+        break;
+      case 'to_do':
+        const checked = block.to_do.checked ? 'x' : ' ';
+        markdown += `- [${checked}] ` + getText(block.to_do.rich_text) + '\n';
+        break;
+      case 'quote':
+        markdown += '> ' + getText(block.quote.rich_text) + '\n\n';
+        break;
+      case 'code':
+        markdown += '```\n' + getText(block.code.rich_text) + '\n```\n\n';
+        break;
+      case 'divider':
+        markdown += '---\n\n';
+        break;
+      case 'image':
+        const imgUrl = block.image.file?.url || block.image.external.url;
+        markdown += `![Image](${imgUrl})\n\n`;
+        break;
+      default:
+        console.log(`Unsupported block type: ${block.type}`);
+    }
+  });
+
+  return markdown.trim();
+};
+
+export function prettyPageContent(contents: any)
+{
+    let pageBlock:any = [];
+    for(let block of contents) {
+      let line:any = {};
+      
+        console.dir(block[block.type], 0)
+        
+      if(block.last_edited_by) {
+        line.LastEditedBy = block.last_edited_by;
+      }
+      
+      switch(block.type) {
+      case "title":
+        line = { type: "title", "text": getText(block) };
+        break;
+      
+      case "heading_1":
+      case "heading_2":
+      case "heading_3":
+      case "paragraph":
+        line = { type: block.type, "text": getText(block) };
+        break;
+        /*
+      case "bulleted_list_item":
+        let text = "";
+        for(let i=0; i<block[block.type].text.length; ++i) {
+          if(block.type == "bulleted_list_item") {
+            text += "・";
+          }
+          
+          if(block[block.type].text[i].href) {
+            text += block[block.type].text[i].plain_text.replace(block[block.type].text[i].href, "<" + block[block.type].text[i].href + ">");
+          } else {
+            text += block[block.type].text[i].plain_text
+          }
+          text += "\n";
+        }
+        line = { type:"markdown", "text": text };
+        break;
+        */
+        default:
+          line = block;
+          break;
+      }
+      pageBlock.push(line);
+    }
+    return pageBlock;
 }
 
 async function getNotionUsers() {
@@ -138,7 +288,7 @@ async function getSettingFromNotion(dbId: string, filter: any) {
   }
   
   return config.map(page => {
-    let json = prettyPage(page);
+    let json = prettyPageProperty(page);
     
     //必要な情報を設定しとく、かぶったら知らん…
     json.child_id = page.id;
@@ -309,7 +459,7 @@ exports.getPageConf = async (pgId: string) =>
 	let page = await notion.pages.retrieve({
 		page_id: pgId
 	});
-	return prettyPage(page);
+	return prettyPageProperty(page);
 }
 
 export async function getContents(pgId: string, withChilds: boolean = false)

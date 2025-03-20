@@ -1,22 +1,12 @@
-import { chatWithSession } from "./../lib/chatgpt"
-import { getMaster, getLevel, getGameInfo, getAIRule } from "./../lib/masterDataCache"
-import { internalEvent } from "../gameserver/server"
-import { query } from "./../lib/database"
-import { createPage, getPageProperties, getDatabase, prettyPage } from "./../lib/notion"
+import { DataType, PagePropertyScheme, WordPropertyScheme, NotePropertyScheme, NotionDBInfo, TableInfo } from "./dataScheme"
+import { getNotionData, createNotionData } from "./notionData"
 const { v4: uuidv4 } = require('uuid')
 
-const axios = require("axios");
-const cheerio = require("cheerio");
-const { convert } = require("html-to-text");
-const jsonpath = require("jsonpath");
-const xpath = require("xpath");
-const { DOMParser } = require("xmldom");
 
-
-let wordTableId = "1ba39cbfbab980adaf6bc97edae68811";
-let pageCache:any = [];
-
-export async function diggingWord(word: string) {
+//NOTE: neo4jのほうにだけデータがあるという状態は想定しない
+export async function openPage(URI: string) {
+	//let result = getNode(DataType.PAGE, "URI", URI);
+	
 	
 }
 

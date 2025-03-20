@@ -1,6 +1,7 @@
 import { query } from "./../lib/database"
 import { getTable } from "./../cococore/cocopage"
-import { getNotionData, DataType } from "./../monad/notionData"
+import { openPage } from "./../monad/monad"
+import { convertToMarkdown } from "./../lib/notion"
 const { v4: uuidv4 } = require('uuid')
 const fs = require('fs').promises;
 const markdown = require('markdown-it');
@@ -15,9 +16,23 @@ export async function index(req: any,res: any,route: any)
 //
 export async function test(req: any,res: any,route: any)
 {
-	let result:any = await getNotionData(DataType.PAGE, "https://candle-stoplight-544.notion.site/1-1b439cbfbab980e9b6ecef87870f30fb");
+	let page:any = await openPage("https://candle-stoplight-544.notion.site/1-1b439cbfbab980e9b6ecef87870f30fb");
 	
-	result.Status = 200;
-	
-	return result;
+	if(page) {
+	 	let md = markdown();
+		page.Page.Contents = convertToMarkdown(page.Page.Contents);
+	 	page.Page.Contents = encodeURIComponent(md.render(page.Page.Contents));
+		return {
+			Status: 200,
+			Page: page,
+		}
+	}
+	else
+	{
+		return {
+			Status: 404,
+			Message: "Page Not Found."
+		}
+
+	}
 }
