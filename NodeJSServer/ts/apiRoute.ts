@@ -26,6 +26,12 @@ exports.Routes = {
 				}
 			}
 		},
+		"/classroom" : {
+			"/" : "classroom#main#    授業ページ",
+			"/user" : {
+				"/create" : "classroom#usercreate#    授業ページ",
+			}
+		},
 		"/monad" : {
 			"/" : "monad#test#sss"
 		},

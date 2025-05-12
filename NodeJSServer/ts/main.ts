@@ -29,7 +29,7 @@ import { setupNeo4j } from "./lib/neo4j"
 	
 	//await loadInformation();
 	
-	await setupNeo4j();
+	//await setupNeo4j();
 	
 	//自分のIPを取得する
 	findElasticIP();
