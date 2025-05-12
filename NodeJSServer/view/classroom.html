@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no">
 <title>CLASSROOM</title>
 <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet" />
-<script src="anime.min.js"></script>
 <style>
 
 /* ドット調のフォントに変更 */
@@ -316,27 +315,11 @@ window.addEventListener("load", async (event) => {
 	
 	//localhostの場合挙動を変える
 	if(document.location.hostname == "localhost") {
-		baseURI = "http://localhost:4649";
+		baseURI = "http://localhost";
 	}
 	
 	//セーブデータ取得
 	loadSaveData();
-	
-	//animating wallpaper
-	var tl = anime.timeline({
-		targets: "body",
-		direction: 'alternate', // Is not inherited
-		easing: 'easeInOutCubic',
-		loop: true
-	});
-	tl.add({
-		backgroundPositionX: 100,
-		duration: 100000
-	})
-	.add({
-		backgroundPositionX: 0,
-		duration: 100000,
-	})
 	
 	//ページコンテンツの分解
 	setupSPA();
@@ -391,11 +374,14 @@ async function createClassRoomPage(data) {
 	});
 	
 	let result = await req.json();
+	console.log(result)
 	if(result.Success) {
 		userData = result.UserData;
 		localStorage.setItem("UserData", JSON.stringify(userData));
 		saveSessionData();
 	}
+	
+	return result;
 }
 
 
@@ -668,9 +654,11 @@ function setupSPA() {
 		};
 		console.log(data);
 		
-		summonEffect();
-		await createClassRoomPage(data);
-		userCreateNextPageCheck(1);
+		//loadEffect(EFFECT.SUMMON);
+		let result = await createClassRoomPage(data);
+		
+		loadPage(PAGE.MAIN);
+		getElm("pageLink").innerHTML = `<a href="${result.url}" target="_blank">${result.url}</a>`;
 	});
 }
 
@@ -1061,9 +1049,9 @@ function parsePayload(payload) {
 					<div class="nes-select is-warning">
 						<select required id="class-name">
 						<option value="0" disabled selected hidden>選択しましょう...</option>
-						<option value="1">3年制ゲームプログラマー専攻　2年次　(PS24)</option>
-						<option value="2">4年制ゲームプログラマー専攻　3年次　(PA23)</option>
-						<option value="3">4年制ゲームプログラマー専攻　2年次　(PA24)</option>
+						<option value="PS24">3年制ゲームプログラマー専攻　2年次　(PS24)</option>
+						<option value="PA23">4年制ゲームプログラマー専攻　3年次　(PA23)</option>
+						<option value="PA24">4年制ゲームプログラマー専攻　2年次　(PA24)</option>
 						</select>
 					</div>
 					
@@ -1082,7 +1070,7 @@ function parsePayload(payload) {
 		</div>
 	</div>
 	
-	<div id="page-main" class="main" style="display:none">
+	<div id="page-main" class="main center" style="display:none">
 		<div class="main-block">
 			<div class="header">
 				<h1 class="nes-header checkbg">HELLO WORLD</h1>
@@ -1091,22 +1079,12 @@ function parsePayload(payload) {
 			<div style="height:80px;"></div>
 			
 			<div id="page-tutorial-hello">
-				<div class="nes-balloon from-left">
+				<div class="nes-container status">
 					<div class="center">
-						授業用ページにアクセスして、アクセス権をリクエストしてください！<br />
+						以下の授業用ページにアクセスして、アクセス権をリクエストしてください！<br />
 						<br /><br /><br />
 						授業用ページのリンクはこちら<br />
-						<br /><br /><br />
-						会場のゲームに自分の分身を登場<<リンク>>させ、AIにより生成される冒険譚を楽しんだり、<br />
-						遊んでいるプレイヤーを「応援」することで、プレイヤーを助けることができます。<br />
-						自分が遊んだゲームの出来事が、ほかのプレイヤーのゲームに影響することもあるとか…？<br />
-						<br />
-						会場だけで体験可能な、ふだんはできない遊び方を楽しんでいってください。<br />
-						<br />
-						まずは、自分の分身となる冒険者を『召喚』しましょう！<br />
-						<button type="button" class="nes-btn is-success" onclick="nextTutorial()">キャラクリエイトへ</button>
-						<br /><br /><br />
-						召喚された冒険者たちは、AIで動くゲーム「いぬのだいぼうけん」に登場するよ！
+						<div id="pageLink"></div>
 						<br /><br /><br />
 					</div>
 				</div>

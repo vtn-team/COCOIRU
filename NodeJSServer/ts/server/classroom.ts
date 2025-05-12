@@ -31,7 +31,9 @@ export async function usercreate(req: any,res: any,route: any)
 	let weekTime = route.query.WeekTime;
 	let githubLink = route.query.GithubLink;
 	
-	let result = null;
+	let result = {
+		url: ""
+	};
 	try {
 		let props: any = {};
 		let page:any = await createPage({
@@ -40,12 +42,15 @@ export async function usercreate(req: any,res: any,route: any)
 			},
 			"properties": {
 				"タイトル": { "title": [{ "text": { "content": "ゲーム制作授業用ページ" } }] },
-				"名前": { "rich_text": [{ "text": { "content": "ああああ" } }] },
+				"名前": { "rich_text": [{ "text": { "content": name } }] },
+				"週に動ける時間": { "rich_text": [{ "text": { "content": weekTime } }] },
+				"クラス": { select: { name: className } },
+				"Githubのリンク": { url: githubLink },
 			}
 		});
 		
 		console.log(page);
-		result = prettyPageProperty(page);
+		result.url = page.url;
 	}catch(ex){
 		console.log(ex);
 	}

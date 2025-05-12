@@ -27,10 +27,7 @@ exports.Routes = {
 			}
 		},
 		"/classroom" : {
-			"/" : "classroom#main#    授業ページ",
-			"/user" : {
-				"/create" : "classroom#usercreate#    授業ページ",
-			}
+			"/" : "classroom#main#    授業ページ"
 		},
 		"/monad" : {
 			"/" : "monad#test#sss"
@@ -55,6 +52,11 @@ exports.Routes = {
 		"/maintain" : "vc#maintenance#             メンテナンス",
 		"/tools" : {
 			"/ephemeralkey" : "ai#ephemeralkey#     エフェメラルキーを取得"
+		},
+		"/classroom" : {
+			"/user" : {
+				"/create" : "classroom#usercreate#    授業ページ",
+			}
 		},
 		"/ai" : {
 			"/all" : {
