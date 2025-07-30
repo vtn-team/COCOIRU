@@ -1,0 +1,311 @@
+# Google OAuth実装ログ - 2025年7月30日
+
+## 実装概要
+NodeJSServerにGoogle OAuth2ログイン機能を実装しました。
+
+## 変更されたファイル
+
+### 1. package.json
+**追加された依存関係:**
+- google-auth-library: ^10.2.0
+- passport: ^0.7.0
+- passport-google-oauth20: ^2.0.0
+- express-session: ^1.18.2
+
+### 2. ts/config/config.ts.sample
+**追加された設定項目:**
+```typescript
+//Google OAuth
+export const GOOGLE_CLIENT_ID = "your-google-client-id.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_SECRET = "your-google-client-secret";
+export const GOOGLE_CALLBACK_URL = "http://localhost/auth/google/callback";
+
+//session secret
+export const SESSION_SECRET = "your-session-secret-key";
+
+//Neo4j
+export const NEO4J_URI = "bolt://localhost:7687";
+export const NEO4J_USER = "neo4j";
+export const NEO4J_PASSWORD = "password";
+
+//Notion
+export const COCOIRU_NOTION_TOKEN = "";
+```
+
+### 3. ts/server/auth.ts
+**大幅な機能追加:**
+- OAuth2Clientの初期化
+- `googleLogin()` - OAuth認証開始エンドポイント
+- `googleCallback()` - OAuth認証コールバック処理
+- `logout()` - ログアウト機能
+- `me()` - 現在のユーザー情報取得
+- `loginPage()` - ログインページ表示
+- 既存の`googleAuth()`は従来のIDトークン検証として保持
+
+**主要な処理:**
+- Google OAuth2フローの完全実装
+- ユーザー情報の自動取得・保存
+- データベースとの連携（User テーブル）
+- Redisキャッシュでのセッション管理
+- セキュアなクッキー設定
+
+### 4. ts/apiRoute.ts
+**追加されたルート:**
+```javascript
+"/auth" : {
+    "/google" : "auth#googleLogin#       Google OAuth開始",
+    "/google/callback" : "auth#googleCallback# Google OAuthコールバック",
+    "/logout" : "auth#logout#            ログアウト",
+    "/me" : "auth#me#                   現在のユーザー情報"
+},
+"/login" : "auth#loginPage#             ログインページ"
+```
+
+### 5. view/login.html（新規作成）
+**特徴:**
+- レスポンシブデザインのログインページ
+- Google OAuth ボタン
+- IDトークン直接入力オプション
+- VantanConnectブランディング
+
+### 6. ts/config/config.ts（新規作成）
+config.ts.sampleからコピーして作成
+
+### 7. CLAUDE.md
+**追加されたセクション:**
+- Google OAuth Authentication
+- OAuth Configuration
+- Authentication Endpoints
+- Session Management
+- 開発ワークフローの更新
+
+## 実装された機能
+
+### OAuth2認証フロー
+1. `/auth/google` でOAuth認証開始
+2. Googleの認証ページにリダイレクト
+3. `/auth/google/callback` でコールバック処理
+4. ユーザー情報取得・データベース保存
+5. セッション作成・クッキー設定
+6. アプリケーションにリダイレクト
+
+### セッション管理
+- Redis キャッシュを使用
+- ユーザーID、メール、名前、プロフィール画像を保存
+- セキュアクッキー設定（HttpOnly, Secure, SameSite）
+
+### データベース統合
+- Userテーブルでのユーザー管理
+- 新規ユーザー自動作成
+- 既存ユーザー情報更新
+
+### エンドポイント
+- `GET /login` - ログインページ表示
+- `GET /auth/google` - OAuth認証開始
+- `GET /auth/google/callback` - OAuth認証コールバック
+- `GET /auth/logout` - ログアウト
+- `GET /auth/me` - ユーザー情報取得
+- `POST /callback` - レガシーIDトークン検証
+
+## セキュリティ機能
+- IDトークン検証
+- CSRF保護（トークンベース）
+- セッションタイムアウト
+- ドメイン限定クッキー
+
+## 使用方法
+
+### 設定
+1. Google Cloud ConsoleでOAuth2認証情報を作成
+2. `config.ts`でクライアントID・シークレットを設定
+3. コールバックURLを設定
+
+### 起動
+```bash
+npm install
+npx tsc
+node js/main.js --useCache
+```
+
+### アクセス
+- ログインページ: http://localhost/login
+- 直接OAuth開始: http://localhost/auth/google
+
+## 技術的詳細
+
+### 使用ライブラリ
+- google-auth-library: Googleトークン検証
+- passport関連: 将来の拡張用（未使用）
+
+### エラーハンドリング
+- 認証失敗時の適切なエラーレスポンス
+- ログ出力による問題追跡
+
+### 互換性
+- 既存の認証システムとの並存
+- レガシーIDトークン検証の保持
+
+## 今後の拡張可能性
+- 他のOAuthプロバイダー追加
+- JWT トークンベース認証
+- 権限管理システム
+- 2FA（二要素認証）
+
+## 注意事項
+- 本番環境では適切なSSL証明書が必要
+- ドメイン設定の調整が必要
+- Redis サーバーの起動が必要
+- データベーススキーマの事前設定が必要
+
+---
+
+# メインページ実装ログ - 2025年7月30日
+
+## 実装概要
+COCOIRU（わたしはいまここにいます）のメインページを実装しました。
+ユーザーの現在地情報、メンバー一覧、タスク管理機能を含む包括的なダッシュボードです。
+
+## 新規作成ファイル
+
+### 1. Web/Main.html
+**フロントエンド メインページ**
+- レスポンシブデザインのダッシュボード
+- メンバー一覧表示（現在地・ステータス付き）
+- 自分のステータス表示（アクティブ状態、場所、タスク進捗）
+- 今日の予定・タスク一覧
+- ヘルプ要請ボタン
+- モーダルウィンドウ（メンバー詳細、タスク詳細）
+- WebSocket接続でリアルタイム更新
+- PWA対応（マニフェスト、サービスワーカー）
+
+**主要機能:**
+- Google OAuth認証済みユーザー情報表示
+- メンバークリックで詳細表示・オープンチャット機能
+- タスククリックで詳細表示・後回し機能
+- ヘルプ要請（通知送信）
+- リアルタイムステータス更新
+
+### 2. NodeJSServer/ts/server/main.ts
+**バックエンド メインページAPI**
+
+**実装された関数:**
+- `index()` - メインページHTML表示
+- `getMembers()` - メンバー一覧取得（アクティブユーザー）
+- `getTasks()` - ユーザーの今日のタスク一覧
+- `updateStatus()` - ユーザーステータス更新（場所、状態、活動内容）
+- `requestHelp()` - ヘルプ要請送信・通知
+- `postponeTask()` - タスク後回し（1時間延期）
+- `getMyStatus()` - 現在のユーザーステータス・タスク進捗取得
+- `updateActivity()` - アクティブウィンドウ情報記録
+- `updateLocation()` - WiFi情報から位置判定・更新
+- `broadcastToActiveUsers()` - WebSocket通知（仮実装）
+
+### 3. Server/cocoiru_tables.sql
+**データベーステーブル定義**
+
+**新規テーブル:**
+- `UserStatus` - ユーザーの現在地・ステータス・最終更新時刻
+- `Task` - ユーザーのタスク・予定管理
+- `HelpRequest` - ヘルプ要請履歴
+- `ActivityLog` - アクティブウィンドウ使用統計
+- `WifiLocation` - WiFi SSID/MAC と場所の対応表
+
+**サンプルデータ:**
+- 基本的なWiFi位置情報（学校、家）
+- テスト用タスクデータ
+
+## 更新されたファイル
+
+### 4. NodeJSServer/ts/apiRoute.ts
+**追加されたAPIルート:**
+
+**GET ルート:**
+- `/main` - メインページ表示
+- `/api/members` - メンバー一覧取得
+- `/api/tasks` - タスク一覧取得
+- `/api/status` - 自分のステータス取得
+
+**POST ルート:**
+- `/api/status` - ステータス更新
+- `/api/help` - ヘルプ要請
+- `/api/activity` - アクティビティ更新
+- `/api/location` - 位置情報更新
+- `/api/tasks/{id}/postpone` - タスク後回し
+
+## 実装された機能詳細
+
+### ユーザー状態管理
+1. **位置情報判定**: WiFi SSID/MACアドレスから自動判定
+2. **アクティブ状態**: オンライン/オフライン/離席中
+3. **現在の活動**: アクティブウィンドウから自動取得
+4. **最終更新時刻**: リアルタイム更新
+
+### メンバー管理
+1. **アクティブメンバー表示**: 1時間以内に更新されたユーザー
+2. **メンバー詳細表示**: クリックでモーダル表示
+3. **オープンチャット**: Discord連携（準備済み）
+4. **ステータス表示**: 現在地・活動状況・最終更新
+
+### タスク管理
+1. **今日の予定表示**: 当日のタスク一覧
+2. **タスク詳細**: 説明・時刻・優先度表示
+3. **後回し機能**: 1時間延期機能
+4. **進捗表示**: 完了率を視覚的に表示
+
+### 通知・ヘルプ機能
+1. **ヘルプ要請**: 全メンバーに通知送信
+2. **リアルタイム通知**: WebSocket経由（準備済み）
+3. **通知履歴**: データベース記録
+4. **PWA通知**: ブラウザ通知対応
+
+## 技術仕様
+
+### フロントエンド
+- **レスポンシブデザイン**: PC/スマホ対応
+- **PWA対応**: オフライン動作・プッシュ通知
+- **WebSocket**: リアルタイム通信
+- **モダンCSS**: Grid Layout, Flexbox, CSS Variables
+- **バニラJS**: フレームワーク不使用の軽量実装
+
+### バックエンド
+- **認証**: Google OAuth2セッション認証
+- **データベース**: MariaDB + Redis キャッシュ
+- **API設計**: RESTful API
+- **エラーハンドリング**: 適切な HTTP ステータスコード
+- **セキュリティ**: セッション検証・SQL インジェクション対策
+
+### データベース設計
+- **正規化**: 適切な外部キー制約
+- **インデックス**: パフォーマンス最適化
+- **デフォルト値**: 適切な初期値設定
+- **カスケード削除**: データ整合性保証
+
+## 使用方法
+
+### 初期設定
+1. データベーステーブル作成: `Server/cocoiru_tables.sql` を実行
+2. TypeScript コンパイル: `npx tsc`
+3. サーバー起動: `node js/main.js --useCache`
+
+### アクセス
+- メインページ: `http://localhost/main`
+- ログインページ: `http://localhost/login`
+
+### 主要操作
+1. **メンバー確認**: メンバーカードクリックで詳細表示
+2. **タスク管理**: タスククリックで詳細・後回し操作
+3. **ヘルプ要請**: 右下の🆘ボタンでヘルプ送信
+4. **ステータス確認**: サイドバーで自分の状態確認
+
+## 今後の拡張予定
+1. **WebSocket実装**: リアルタイム通信の完全実装
+2. **Discord連携**: 音声通話・メッセージ送信
+3. **GitHub連携**: コミットログ・デイリーレポート
+4. **PCアプリ連携**: アクティブウィンドウ自動取得
+5. **通知機能**: プッシュ通知・メール通知
+
+## デバッグ・監視
+- コンソールログによる動作確認
+- データベースクエリログ
+- WebSocket接続状況監視
+- エラーハンドリング・ユーザーフィードバック

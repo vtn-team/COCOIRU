@@ -39,3 +39,11 @@ export const PUSH_PRIVATE_KEY = "";
 
 //push
 export const PUSH_PUBLIC_KEY = "";
+
+//Google OAuth
+export const GOOGLE_CLIENT_ID = "your-google-client-id.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_SECRET = "your-google-client-secret";
+export const GOOGLE_CALLBACK_URL = "http://localhost/auth/google/callback";
+
+//session secret
+export const SESSION_SECRET = "your-session-secret-key";

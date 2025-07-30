@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COCOIRU - わたしはいまここにいます</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #667eea;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-online { background: #4CAF50; }
+        .status-offline { background: #f44336; }
+        .status-away { background: #ff9800; }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            fill: #667eea;
+        }
+
+        .member-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .member-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .member-card:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+
+        .member-details {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .member-location {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            fill: #666;
+        }
+
+        .my-status {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .status-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .task-list {
+            margin-top: 15px;
+        }
+
+        .task-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background: #f5f5f5;
+            transform: translateX(5px);
+        }
+
+        .task-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .task-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .help-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(255, 107, 107, 0.6);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- メインコンテンツ -->
+        <div class="main-content">
+            <div class="header">
+                <div class="logo">COCOIRU</div>
+                <div class="user-info" id="userInfo">
+                    <img id="userAvatar" class="user-avatar" src="" alt="ユーザーアバター">
+                    <div>
+                        <div class="user-name" id="userName">ログイン中...</div>
+                        <div id="userStatus">
+                            <span class="status-indicator status-online"></span>
+                            オンライン
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- メンバーリスト -->
+            <div class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A2.999 2.999 0 0 0 17.06 6H14.94c-1.4 0-2.54 1.15-2.54 2.54L9.86 16H12.5v6h7.5zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2 .89 2 2s-.89 2-2 2-2-.89-2-2 .89-2 2-2zm2.5 16v-6H5.5l2.54-7.63A2.999 2.999 0 0 1 10.94 6h2.12c1.4 0 2.54 1.15 2.54 2.54L12.86 16H10.5v6H8z"/>
+                    </svg>
+                    メンバー一覧
+                </h2>
+                <div class="member-list" id="memberList">
+                    <!-- メンバーカードは動的に生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- サイドバー（自分の状態） -->
+        <div class="sidebar">
+            <div class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    自分の状態
+                </h2>
+                <div class="my-status">
+                    <div class="status-row">
+                        <span class="status-label">状態</span>
+                        <span class="status-value" id="myActiveStatus">アクティブ</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">場所</span>
+                        <span class="status-value" id="myLocation">学校</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">今日のタスク実行量</span>
+                        <div>
+                            <div class="status-value" id="taskProgress">65%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                    </svg>
+                    今日の予定
+                </h2>
+                <div class="task-list" id="taskList">
+                    <!-- タスクは動的に生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ヘルプボタン -->
+    <button class="help-button" onclick="requestHelp()" title="ヘルプを要請">
+        🆘
+    </button>
+
+    <!-- メンバー詳細モーダル -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalMemberName">メンバー詳細</h3>
+                <button class="close-btn" onclick="closeMemberModal()">&times;</button>
+            </div>
+            <div id="modalMemberContent">
+                <!-- メンバー詳細情報 -->
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="openDiscordChat()">オープンチャット開始</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- タスク詳細モーダル -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTaskName">タスク詳細</h3>
+                <button class="close-btn" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <div id="modalTaskContent">
+                <!-- タスク詳細情報 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let members = [];
+        let tasks = [];
+        let ws = null;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserInfo();
+            await loadMembers();
+            await loadTasks();
+            connectWebSocket();
+            
+            // サービスワーカー登録
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/serviceworker.js');
+            }
+        });
+
+        // ユーザー情報を読み込み
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/auth/me');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    updateUserDisplay();
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('ユーザー情報の取得に失敗:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // ユーザー表示を更新
+        function updateUserDisplay() {
+            if (!currentUser?.user) return;
+            
+            document.getElementById('userName').textContent = currentUser.user.name;
+            document.getElementById('userAvatar').src = currentUser.user.picture || '/default-avatar.png';
+        }
+
+        // メンバー一覧を読み込み
+        async function loadMembers() {
+            try {
+                const response = await fetch('/api/members');
+                if (response.ok) {
+                    members = await response.json();
+                    renderMembers();
+                }
+            } catch (error) {
+                console.error('メンバー情報の取得に失敗:', error);
+            }
+        }
+
+        // メンバー一覧を描画
+        function renderMembers() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = '';
+
+            members.forEach(member => {
+                const memberCard = document.createElement('div');
+                memberCard.className = 'member-card';
+                memberCard.onclick = () => showMemberDetails(member);
+                
+                memberCard.innerHTML = `
+                    <div class="member-info">
+                        <img class="member-avatar" src="${member.picture || '/default-avatar.png'}" alt="${member.name}">
+                        <div class="member-details">
+                            <div class="member-name">${member.name}</div>
+                            <div class="member-location">
+                                <svg class="location-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                                ${member.location}
+                                <span class="status-indicator status-${member.status}"></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                memberList.appendChild(memberCard);
+            });
+        }
+
+        // タスク一覧を読み込み
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                if (response.ok) {
+                    tasks = await response.json();
+                    renderTasks();
+                }
+            } catch (error) {
+                console.error('タスク情報の取得に失敗:', error);
+            }
+        }
+
+        // タスク一覧を描画
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            tasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.onclick = () => showTaskDetails(task);
+                
+                taskItem.innerHTML = `
+                    <div class="task-name">${task.name}</div>
+                    <div class="task-time">${task.time}</div>
+                `;
+                
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // WebSocket接続
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket接続成功');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket接続が閉じられました');
+                setTimeout(connectWebSocket, 5000); // 5秒後に再接続
+            };
+        }
+
+        // WebSocketメッセージ処理
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'status_update':
+                    updateMemberStatus(data);
+                    break;
+                case 'help_request':
+                    showHelpNotification(data);
+                    break;
+                case 'task_update':
+                    updateTaskProgress(data);
+                    break;
+            }
+        }
+
+        // メンバー詳細を表示
+        function showMemberDetails(member) {
+            document.getElementById('modalMemberName').textContent = member.name;
+            document.getElementById('modalMemberContent').innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="${member.picture || '/default-avatar.png'}" alt="${member.name}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
+                    <div style="font-size: 1.2rem; font-weight: 600;">${member.name}</div>
+                    <div style="color: #666;">📍 ${member.location}</div>
+                    <div style="color: #666;">⏰ 最終更新: ${member.lastUpdate}</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">現在の活動</div>
+                    <div>${member.currentActivity || '作業中'}</div>
+                </div>
+            `;
+            
+            document.getElementById('memberModal').style.display = 'block';
+        }
+
+        // タスク詳細を表示
+        function showTaskDetails(task) {
+            document.getElementById('modalTaskName').textContent = task.name;
+            document.getElementById('modalTaskContent').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">詳細</div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        ${task.description || 'タスクの詳細はありません'}
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">予定時刻</div>
+                    <div>${task.time}</div>
+                </div>
+                <div style="text-align: center;">
+                    <button class="btn btn-small" onclick="postponeTask(${task.id})">後回しにする</button>
+                </div>
+            `;
+            
+            document.getElementById('taskModal').style.display = 'block';
+        }
+
+        // ヘルプ要請
+        async function requestHelp() {
+            if (confirm('メンバーにヘルプを要請しますか？')) {
+                try {
+                    const response = await fetch('/api/help', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: 'ヘルプが必要です！' })
+                    });
+                    
+                    if (response.ok) {
+                        alert('ヘルプ要請を送信しました！');
+                    }
+                } catch (error) {
+                    console.error('ヘルプ要請の送信に失敗:', error);
+                }
+            }
+        }
+
+        // Discord チャット開始
+        function openDiscordChat() {
+            // Discord連携の実装
+            alert('Discord連携機能は開発中です');
+        }
+
+        // タスク後回し
+        async function postponeTask(taskId) {
+            try {
+                const response = await fetch(`/api/tasks/${taskId}/postpone`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('タスクを後回しにしました');
+                    closeTaskModal();
+                    loadTasks();
+                }
+            } catch (error) {
+                console.error('タスクの後回しに失敗:', error);
+            }
+        }
+
+        // モーダル閉じる
+        function closeMemberModal() {
+            document.getElementById('memberModal').style.display = 'none';
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').style.display = 'none';
+        }
+
+        // モーダル外クリックで閉じる
+        window.onclick = (event) => {
+            const memberModal = document.getElementById('memberModal');
+            const taskModal = document.getElementById('taskModal');
+            
+            if (event.target === memberModal) {
+                closeMemberModal();
+            }
+            if (event.target === taskModal) {
+                closeTaskModal();
+            }
+        };
+    </script>
+</body>
+</html>

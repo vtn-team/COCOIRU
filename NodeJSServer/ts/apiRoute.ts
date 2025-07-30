@@ -44,6 +44,19 @@ exports.Routes = {
 		},
 		"/ai" : {
 			"/modelist" : "ai#modelist#            モデルリスト"
+		},
+		"/auth" : {
+			"/google" : "auth#googleLogin#       Google OAuth開始",
+			"/google/callback" : "auth#googleCallback# Google OAuthコールバック",
+			"/logout" : "auth#logout#            ログアウト",
+			"/me" : "auth#me#                   現在のユーザー情報"
+		},
+		"/login" : "auth#loginPage#             ログインページ",
+		"/main" : "main#index#                 メインページ",
+		"/api" : {
+			"/members" : "main#getMembers#        メンバー一覧取得",
+			"/tasks" : "main#getTasks#            タスク一覧取得",
+			"/status" : "main#getMyStatus#        自分のステータス取得"
 		}
 	},
 	POST: {
@@ -70,6 +83,17 @@ exports.Routes = {
 			},
 			"/google" : {
 				"/chat" : "ai#chatToGeminiWithModel#          チャット"
+			}
+		},
+		"/api" : {
+			"/status" : "main#updateStatus#       ステータス更新",
+			"/help" : "main#requestHelp#          ヘルプ要請",
+			"/activity" : "main#updateActivity#    アクティビティ更新",
+			"/location" : "main#updateLocation#    位置情報更新",
+			"/tasks" : {
+				"@id%d" : {
+					"/postpone" : "main#postponeTask#    タスク後回し"
+				}
 			}
 		}
 	}
