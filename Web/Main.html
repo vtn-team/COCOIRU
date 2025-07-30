@@ -365,6 +365,9 @@
                             オンライン
                         </div>
                     </div>
+                    <button class="btn btn-small" onclick="openLocationManager()" title="位置管理">
+                        📍
+                    </button>
                 </div>
             </div>
 
@@ -460,6 +463,7 @@
         </div>
     </div>
 
+    <script src="/js/location.js"></script>
     <script>
         let currentUser = null;
         let members = [];
@@ -473,11 +477,40 @@
             await loadTasks();
             connectWebSocket();
             
+            // 位置検出を開始
+            initializeLocationDetection();
+            
             // サービスワーカー登録
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/serviceworker.js');
             }
         });
+
+        // 位置検出初期化
+        function initializeLocationDetection() {
+            // 位置変更コールバックを登録
+            window.locationDetector.addLocationCallback(onLocationChanged);
+            
+            // 位置検出を開始
+            window.locationDetector.startDetection();
+        }
+
+        // 位置変更時のコールバック
+        function onLocationChanged(location, lastUpdate) {
+            // 自分のステータス表示を更新
+            updateMyLocationDisplay(location);
+            
+            // サーバーにステータス更新を送信
+            updateServerStatus();
+        }
+
+        // 自分の位置表示を更新
+        function updateMyLocationDisplay(location) {
+            const locationElement = document.getElementById('myLocation');
+            if (locationElement) {
+                locationElement.textContent = location || '不明';
+            }
+        }
 
         // ユーザー情報を読み込み
         async function loadUserInfo() {
@@ -705,6 +738,37 @@
 
         function closeTaskModal() {
             document.getElementById('taskModal').style.display = 'none';
+        }
+
+        // 位置管理を開く
+        function openLocationManager() {
+            window.open('/components/LocationManager.html', 'locationManager', 
+                'width=800,height=700,scrollbars=yes,resizable=yes');
+        }
+
+        // サーバーステータス更新
+        async function updateServerStatus() {
+            try {
+                const locationInfo = window.locationDetector.getCurrentLocation();
+                
+                if (locationInfo.location) {
+                    const response = await fetch('/api/status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: locationInfo.location,
+                            status: 'online',
+                            currentActivity: 'ブラウザ使用中'
+                        })
+                    });
+
+                    if (!response.ok) {
+                        console.warn('ステータス更新に失敗しました');
+                    }
+                }
+            } catch (error) {
+                console.error('サーバーステータス更新エラー:', error);
+            }
         }
 
         // モーダル外クリックで閉じる

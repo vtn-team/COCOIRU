@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位置管理 - COCOIRU</title>
+    <style>
+        .location-manager {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .location-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-icon {
+            width: 24px;
+            height: 24px;
+            fill: #667eea;
+        }
+
+        .detection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-active { background: #4CAF50; }
+        .status-inactive { background: #f44336; }
+        .status-detecting { background: #ff9800; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .current-location {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .location-info {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .location-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .location-value {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .last-update {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .location-controls {
+            display: grid;
+            gap: 15px;
+        }
+
+        .manual-location {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .manual-location h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+
+        .location-select {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .location-dropdown {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .wifi-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .wifi-info h4 {
+            margin: 0 0 10px 0;
+            color: #1565c0;
+        }
+
+        .wifi-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .wifi-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .wifi-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .wifi-value {
+            color: #333;
+        }
+
+        .detection-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .log-timestamp {
+            color: #666;
+            margin-right: 10px;
+        }
+
+        .log-message {
+            color: #333;
+        }
+
+        .location-history {
+            margin-top: 20px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .history-location {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .accuracy-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .accuracy-bar {
+            width: 60px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .accuracy-high { background: #4CAF50; }
+        .accuracy-medium { background: #ff9800; }
+        .accuracy-low { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="location-manager">
+        <div class="location-header">
+            <h3 class="location-title">
+                <svg class="location-icon" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                位置管理
+            </h3>
+            <div class="detection-status">
+                <div id="statusIndicator" class="status-indicator status-inactive"></div>
+                <span id="statusText">停止中</span>
+            </div>
+        </div>
+
+        <!-- 現在の位置 -->
+        <div class="current-location">
+            <div class="location-info">
+                <span class="location-label">現在地:</span>
+                <span id="currentLocation" class="location-value">不明</span>
+            </div>
+            <div class="last-update">
+                最終更新: <span id="lastUpdate">未更新</span>
+            </div>
+            <div class="accuracy-indicator">
+                <span>精度:</span>
+                <div class="accuracy-bar">
+                    <div id="accuracyFill" class="accuracy-fill accuracy-low" style="width: 0%"></div>
+                </div>
+                <span id="accuracyText">0%</span>
+            </div>
+        </div>
+
+        <!-- 位置制御 -->
+        <div class="location-controls">
+            <div style="display: flex; gap: 10px;">
+                <button id="startDetection" class="btn" onclick="startLocationDetection()">
+                    位置検出開始
+                </button>
+                <button id="stopDetection" class="btn btn-secondary" onclick="stopLocationDetection()">
+                    位置検出停止
+                </button>
+                <button class="btn btn-secondary" onclick="refreshLocation()">
+                    今すぐ更新
+                </button>
+            </div>
+
+            <!-- 手動位置設定 -->
+            <div class="manual-location">
+                <h4>手動位置設定</h4>
+                <div class="location-select">
+                    <select id="manualLocationSelect" class="location-dropdown">
+                        <option value="">位置を選択...</option>
+                        <option value="学校">学校</option>
+                        <option value="家">家</option>
+                        <option value="図書館">図書館</option>
+                        <option value="カフェ">カフェ</option>
+                        <option value="外出先">外出先</option>
+                        <option value="不明">不明</option>
+                    </select>
+                    <button class="btn" onclick="setManualLocation()">設定</button>
+                    <button class="btn btn-danger" onclick="clearManualLocation()">クリア</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WiFi情報 -->
+        <div class="wifi-info">
+            <h4>ネットワーク情報</h4>
+            <div class="wifi-details">
+                <div class="wifi-item">
+                    <span class="wifi-label">接続タイプ:</span>
+                    <span id="connectionType" class="wifi-value">不明</span>
+                </div>
+                <div class="wifi-item">
+                    <span class="wifi-label">通信速度:</span>
+                    <span id="connectionSpeed" class="wifi-value">不明</span>
+                </div>
+                <div class="wifi-item">
+                    <span class="wifi-label">WiFi SSID:</span>
+                    <span id="wifiSSID" class="wifi-value">未取得</span>
+                </div>
+                <div class="wifi-item">
+                    <span class="wifi-label">信号強度:</span>
+                    <span id="signalStrength" class="wifi-value">不明</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 位置履歴 -->
+        <div class="location-history">
+            <h4>位置履歴</h4>
+            <div id="locationHistoryList">
+                <!-- 履歴項目は動的に生成 -->
+            </div>
+        </div>
+
+        <!-- 検出ログ -->
+        <div class="detection-log">
+            <div id="detectionLog">
+                <div class="log-entry">
+                    <span class="log-timestamp">システム起動</span>
+                    <span class="log-message">位置検出システムを初期化しました</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/location.js"></script>
+    <script>
+        let locationHistory = [];
+        let detectionAccuracy = 0;
+
+        // 位置検出開始
+        function startLocationDetection() {
+            window.locationDetector.startDetection();
+            updateDetectionStatus(true);
+            addLogEntry('位置検出を開始しました');
+        }
+
+        // 位置検出停止
+        function stopLocationDetection() {
+            window.locationDetector.stopDetection();
+            updateDetectionStatus(false);
+            addLogEntry('位置検出を停止しました');
+        }
+
+        // 位置を即座に更新
+        async function refreshLocation() {
+            addLogEntry('位置情報を手動更新中...');
+            await window.locationDetector.detectLocation();
+        }
+
+        // 手動位置設定
+        function setManualLocation() {
+            const select = document.getElementById('manualLocationSelect');
+            const location = select.value;
+            
+            if (location) {
+                window.locationDetector.setManualLocation(location);
+                addLogEntry(`手動で位置を設定: ${location}`);
+                updateAccuracy(100); // 手動設定は100%の精度
+            }
+        }
+
+        // 手動位置設定クリア
+        function clearManualLocation() {
+            localStorage.removeItem('manualLocation');
+            document.getElementById('manualLocationSelect').value = '';
+            addLogEntry('手動位置設定をクリアしました');
+            refreshLocation();
+        }
+
+        // 検出状態を更新
+        function updateDetectionStatus(isActive) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const startBtn = document.getElementById('startDetection');
+            const stopBtn = document.getElementById('stopDetection');
+
+            if (isActive) {
+                indicator.className = 'status-indicator status-detecting';
+                statusText.textContent = '検出中';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else {
+                indicator.className = 'status-indicator status-inactive';
+                statusText.textContent = '停止中';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        // 位置情報を更新
+        function updateLocationDisplay(location, lastUpdate) {
+            document.getElementById('currentLocation').textContent = location || '不明';
+            document.getElementById('lastUpdate').textContent = lastUpdate ? 
+                lastUpdate.toLocaleString('ja-JP') : '未更新';
+
+            // 履歴に追加
+            if (location && location !== '不明') {
+                addLocationToHistory(location, lastUpdate);
+            }
+
+            // 精度を更新
+            updateAccuracyFromLocation(location);
+        }
+
+        // 位置履歴に追加
+        function addLocationToHistory(location, timestamp) {
+            locationHistory.unshift({ location, timestamp });
+            if (locationHistory.length > 10) {
+                locationHistory = locationHistory.slice(0, 10);
+            }
+            renderLocationHistory();
+        }
+
+        // 位置履歴を描画
+        function renderLocationHistory() {
+            const historyList = document.getElementById('locationHistoryList');
+            historyList.innerHTML = '';
+
+            locationHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <span class="history-location">${item.location}</span>
+                    <span class="history-time">${item.timestamp.toLocaleString('ja-JP')}</span>
+                `;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // 精度を更新
+        function updateAccuracy(accuracy) {
+            detectionAccuracy = accuracy;
+            const accuracyFill = document.getElementById('accuracyFill');
+            const accuracyText = document.getElementById('accuracyText');
+
+            accuracyFill.style.width = `${accuracy}%`;
+            accuracyText.textContent = `${accuracy}%`;
+
+            if (accuracy >= 80) {
+                accuracyFill.className = 'accuracy-fill accuracy-high';
+            } else if (accuracy >= 50) {
+                accuracyFill.className = 'accuracy-fill accuracy-medium';
+            } else {
+                accuracyFill.className = 'accuracy-fill accuracy-low';
+            }
+        }
+
+        // 位置から精度を推定
+        function updateAccuracyFromLocation(location) {
+            let accuracy = 0;
+            
+            if (location === '不明') {
+                accuracy = 0;
+            } else if (localStorage.getItem('manualLocation')) {
+                accuracy = 100; // 手動設定
+            } else if (location === '学校' || location === '家') {
+                accuracy = 85; // WiFi/GPS検出
+            } else {
+                accuracy = 60; // IP/その他
+            }
+            
+            updateAccuracy(accuracy);
+        }
+
+        // ログエントリを追加
+        function addLogEntry(message) {
+            const logContainer = document.getElementById('detectionLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${new Date().toLocaleTimeString('ja-JP')}]</span>
+                <span class="log-message">${message}</span>
+            `;
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+
+            // ログを最大50件に制限
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // ネットワーク情報を更新
+        function updateNetworkInfo() {
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                document.getElementById('connectionType').textContent = 
+                    connection.type || connection.effectiveType || '不明';
+                document.getElementById('connectionSpeed').textContent = 
+                    connection.downlink ? `${connection.downlink} Mbps` : '不明';
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 位置変更コールバックを登録
+            window.locationDetector.addLocationCallback(updateLocationDisplay);
+            
+            // 初期状態を更新
+            const currentStatus = window.locationDetector.getCurrentLocation();
+            if (currentStatus.location) {
+                updateLocationDisplay(currentStatus.location, currentStatus.lastUpdate);
+            }
+            updateDetectionStatus(currentStatus.isDetecting);
+            
+            // ネットワーク情報を更新
+            updateNetworkInfo();
+            
+            // 定期的にネットワーク情報を更新
+            setInterval(updateNetworkInfo, 30000);
+            
+            addLogEntry('位置管理システムが初期化されました');
+        });
+    </script>
+</body>
+</html>

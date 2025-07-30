@@ -56,7 +56,13 @@ exports.Routes = {
 		"/api" : {
 			"/members" : "main#getMembers#        メンバー一覧取得",
 			"/tasks" : "main#getTasks#            タスク一覧取得",
-			"/status" : "main#getMyStatus#        自分のステータス取得"
+			"/status" : "main#getMyStatus#        自分のステータス取得",
+			"/location" : {
+				"/" : "location#index#           位置検出サービス情報",
+				"/ip-location" : "location#ipLocation# IPから位置検出",
+				"/history" : "location#getLocationHistory# 位置履歴取得",
+				"/wifi-locations" : "location#manageWiFiLocations# WiFi位置管理"
+			}
 		}
 	},
 	POST: {
@@ -94,6 +100,12 @@ exports.Routes = {
 				"@id%d" : {
 					"/postpone" : "main#postponeTask#    タスク後回し"
 				}
+			},
+			"/location-api" : {
+				"/wifi-match" : "location#wifiMatch#   WiFi位置マッチング",
+				"/guess" : "location#guessLocation#   ネットワーク品質位置推測",
+				"/reverse-geocode" : "location#reverseGeocode# GPS座標位置変換",
+				"/learn" : "location#learnLocation#   位置情報学習"
 			}
 		}
 	}
