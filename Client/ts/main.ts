@@ -1,45 +1,48 @@
-require('dotenv').config()
-import { launch } from "./server"
-import { findElasticIP } from "./elasticip"
-import { launchDGS } from "./gameserver/server"
-import { connect } from "./lib/database"
-import { HTTP_SERVER_PORT, GAME_SERVER_PORT } from "./config/config"
-import { loadMaster, loadMasterFromCache } from "./lib/masterDataCache"
-import { preloadUniqueUsers } from "./vclogic/vcuser"
-import { setupNeo4j } from "./lib/neo4j"
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
-(async function() {
-	//起動引数を処理する
-	let flags = [];
-	if(process.argv.length >= 2){
-		for(let i=2; i<process.argv.length; ++i){
-			flags.push(process.argv[i].trim());
-		}
-	}
-	
-	//マスタ参照
-	if(flags.indexOf("--useCache") != -1) {
-		await loadMasterFromCache();
-	}else{
-		await loadMaster();
-	}
-	
-	//DBウォームアップ
-	//await connect();
-	
-	//await loadInformation();
-	
-	//await setupNeo4j();
-	
-	//自分のIPを取得する
-	findElasticIP();
-	
-	//ユニークユーザの準備
-	//await preloadUniqueUsers();
-	
-	//HTTPサーバ起動
-	launch(HTTP_SERVER_PORT);
-	
-	//ゲームサーバ起動
-	launchDGS(GAME_SERVER_PORT);
-})();
+let mainWindow;
+
+function createWindow() {
+  // メインウィンドウを作成
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true
+    },
+    icon: path.join(__dirname, 'assets/icon.png') // アイコンがあれば設定
+  });
+
+  // HTMLファイルを読み込み
+  mainWindow.loadFile('view/electron-renderer.html');
+
+  // 開発者ツールを開く（デバッグ用）
+  // mainWindow.webContents.openDevTools();
+
+  // ウィンドウが閉じられた時の処理
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+// アプリが準備完了になったらウィンドウを作成
+app.whenReady().then(createWindow);
+
+// すべてのウィンドウが閉じられた時の処理
+app.on('window-all-closed', () => {
+  // macOS以外では、すべてのウィンドウが閉じられたらアプリを終了
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// アプリがアクティブになった時の処理（macOS用）
+app.on('activate', () => {
+  // macOSでは、ウィンドウが閉じられてもアプリは残る
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});

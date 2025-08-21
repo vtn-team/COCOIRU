@@ -1,8 +1,8 @@
 {
-  "name": "VantanConnect",
-  "version": "0.8.0",
+  "name": "COCOIRU",
+  "version": "0.1.0",
   "description": "",
-  "main": "electron-main.js",
+  "main": "js/main.js",
   "scripts": {
     "test": "node js/main.js --useChace",
     "electron": "electron .",
