@@ -1,0 +1,14 @@
+# プロジェクトの構成
+- Server
+	- サーバコード。nodejsで書かれ、AWSサーバ上で動作する。
+	- WebSocketでの動的なリアルタイムサーバを含む。
+- Client
+	- クライアントコード。nodejs+electronで実装され、各ユーザのPC上で動作する。
+	- ローカルHTTPサーバを立ち上げ、各種機能のハブとなる。
+- Common
+	- ServerとClientで共通で使用されるコードをここにまとめる
+	- ここでコンパイルされた実装は、ServerとClientにPackageとして導入される
+- Unity
+	- Unity用のプラグイン
+- Backend
+	- ローカル開発用のバックエンド処理。DBなど。
