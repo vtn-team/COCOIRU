@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantanConnect - Electron Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: #4a5568;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .header .subtitle {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .status-panel {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 0 8px 8px 0;
+        }
+        .status-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background: #38b2ac;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #319795;
+            transform: translateY(-2px);
+        }
+        .log-area {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .server-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .connection-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status-disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VantanConnect</h1>
+            <p class="subtitle">Electron Client Dashboard</p>
+        </div>
+        
+        <div class="content">
+            <div class="status-panel">
+                <div class="status-title">接続状態</div>
+                <span id="connectionStatus" class="connection-status status-disconnected">未接続</span>
+            </div>
+            
+            <div class="server-controls">
+                <button class="btn btn-primary" onclick="startLocalServer()">ローカルサーバー起動</button>
+                <button class="btn btn-success" onclick="connectToServer()">サーバーに接続</button>
+                <button class="btn btn-info" onclick="openDevTools()">開発者ツール</button>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testWebSocket()">WebSocket テスト</button>
+                <button class="btn btn-primary" onclick="testAPI()">API テスト</button>
+                <button class="btn btn-success" onclick="clearLogs()">ログクリア</button>
+                <button class="btn btn-info" onclick="showAbout()">バージョン情報</button>
+            </div>
+            
+            <div class="log-area" id="logArea">
+                <div>VantanConnect Electron Client が起動しました。</div>
+                <div>準備完了 - 各種機能をテストしてください。</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        function log(message) {
+            const logArea = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (connected) {
+                statusElement.textContent = '接続済み';
+                statusElement.className = 'connection-status status-connected';
+            } else {
+                statusElement.textContent = '未接続';
+                statusElement.className = 'connection-status status-disconnected';
+            }
+        }
+        
+        function startLocalServer() {
+            log('ローカルサーバーを起動しています...');
+            // ここでNode.jsのmain.jsを起動する処理を実装
+            const { spawn } = require('child_process');
+            const path = require('path');
+            
+            try {
+                const serverPath = path.join(__dirname, 'js', 'main.js');
+                const serverProcess = spawn('node', [serverPath, '--useCache'], {
+                    cwd: __dirname
+                });
+                
+                serverProcess.stdout.on('data', (data) => {
+                    log(`サーバー出力: ${data.toString().trim()}`);
+                });
+                
+                serverProcess.stderr.on('data', (data) => {
+                    log(`サーバーエラー: ${data.toString().trim()}`);
+                });
+                
+                log('ローカルサーバーを起動しました');
+                updateConnectionStatus(true);
+            } catch (error) {
+                log(`サーバー起動エラー: ${error.message}`);
+            }
+        }
+        
+        function connectToServer() {
+            log('サーバーに接続を試行しています...');
+            // サーバー接続のテスト
+            fetch('http://localhost:80/api/test')
+                .then(response => {
+                    if (response.ok) {
+                        log('サーバー接続成功');
+                        updateConnectionStatus(true);
+                    } else {
+                        log('サーバー接続失敗');
+                    }
+                })
+                .catch(error => {
+                    log(`接続エラー: ${error.message}`);
+                });
+        }
+        
+        function testWebSocket() {
+            log('WebSocket接続をテストしています...');
+            try {
+                const ws = new WebSocket('ws://localhost:3000');
+                
+                ws.onopen = function() {
+                    log('WebSocket接続成功');
+                    ws.send(JSON.stringify({ type: 'test', message: 'Hello from Electron' }));
+                };
+                
+                ws.onmessage = function(event) {
+                    log(`WebSocketメッセージ受信: ${event.data}`);
+                };
+                
+                ws.onerror = function(error) {
+                    log(`WebSocketエラー: ${error.message || 'Connection failed'}`);
+                };
+                
+                ws.onclose = function() {
+                    log('WebSocket接続が閉じられました');
+                };
+            } catch (error) {
+                log(`WebSocketテストエラー: ${error.message}`);
+            }
+        }
+        
+        function testAPI() {
+            log('API接続をテストしています...');
+            fetch('http://localhost:80/')
+                .then(response => response.text())
+                .then(data => {
+                    log('API応答受信: ' + data.substring(0, 100) + '...');
+                })
+                .catch(error => {
+                    log(`APIテストエラー: ${error.message}`);
+                });
+        }
+        
+        function clearLogs() {
+            document.getElementById('logArea').innerHTML = '<div>ログがクリアされました。</div>';
+        }
+        
+        function openDevTools() {
+            require('electron').remote.getCurrentWindow().webContents.openDevTools();
+        }
+        
+        function showAbout() {
+            const electronVersion = process.versions.electron;
+            const nodeVersion = process.versions.node;
+            const chromeVersion = process.versions.chrome;
+            
+            log(`Electron: ${electronVersion}, Node.js: ${nodeVersion}, Chrome: ${chromeVersion}`);
+            alert(`VantanConnect Electron Client\n\nElectron: ${electronVersion}\nNode.js: ${nodeVersion}\nChrome: ${chromeVersion}`);
+        }
+        
+        // 初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Electron Renderer プロセスが初期化されました');
+        });
+    </script>
+</body>
+</html>

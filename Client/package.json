@@ -2,9 +2,12 @@
   "name": "VantanConnect",
   "version": "0.8.0",
   "description": "",
-  "main": "main.js",
+  "main": "electron-main.js",
   "scripts": {
-    "test": "node js/main.js --useChace"
+    "test": "node js/main.js --useChace",
+    "electron": "electron .",
+    "electron-dev": "npx tsc && electron .",
+    "build": "npx tsc"
   },
   "author": "",
   "license": "ISC",
@@ -45,6 +48,7 @@
     "@types/web-push": "^3.6.4",
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.5.13",
+    "electron": "^37.3.1",
     "ts-node-dev": "^1.1.6",
     "websocket": "^1.0.35"
   }
