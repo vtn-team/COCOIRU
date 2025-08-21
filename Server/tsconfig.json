@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "rootDir": "./ts", /* Specify the root folder within your source files. */
+    "outDir": "./js", /* Specify an output folder for all emitted files. */
+    "strict": true, /* Enable all strict type-checking options. */
+    "module": "commonjs",
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "sourceMap": true //ブレークポイントが貼れてデバッグ用に便利なので作る。リリースではもちろん切る
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "ts/test/*.ts",
+    "node_modules"
+  ]
+}
